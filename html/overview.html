@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="content-type" content="application/xhtml+xml; charset=iso-8859-1" />
+<meta http-equiv="refresh" content="300" />
+
+<title>Hanxornia - Munin Overview</title>
+
+<link rel="stylesheet" href="./static/style-new.css" type="text/css" />
+<link rel="icon" type="image/vnd.microsoft.icon" href="./static/favicon.ico" />
+
+<style>
+html {
+  background: #000;
+  min-height: 100%;
+  min-width: 100%;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  padding-top: 50px;
+  margin: 0;
+  font-family: sans-serif;
+  background: #000;
+  color: #ddd;
+  min-height: 100vh;
+  min-width: max-content;
+}
+
+/* ── Topbar ── */
+#topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 42px;
+  background: #1e1e1e;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 15px;
+  color: #ddd;
+  font-family: sans-serif;
+  font-size: 14px;
+  border-bottom: 1px solid #333;
+}
+
+.topbar-sep {
+  width: 1px;
+  height: 22px;
+  background: #444;
+  margin: 0 4px;
+}
+
+#topbar a {
+  color: #4da3ff;
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #2a2a2a;
+}
+
+#topbar a.active {
+  background: #4da3ff;
+  color: #000;
+}
+
+/* View-switch buttons get a distinct accent when active */
+#topbar a.view-btn.active {
+  background: #e0a020;
+  color: #000;
+}
+
+/* ── Views ── */
+.view { display: none; }
+.view.visible { display: block; }
+
+/* ── Groups & headers ── */
+.group {
+  margin-bottom: 40px;
+}
+
+.group-header {
+  position: sticky;
+  top: 42px;
+  left: 0;
+  width: 100vw;
+  background: #2a6099;
+  color: #fff;
+  font-size: 200%;
+  font-weight: bold;
+  font-family: sans-serif;
+  padding: 8px 24px;
+  margin-bottom: 4px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  z-index: 20;
+}
+
+.section {
+  display: block;
+  width: max-content;
+  margin-bottom: 0;
+}
+
+h4 {
+  display: block;
+  position: sticky;
+  top: 92px;
+  left: 0;
+  width: 100vw;
+  background-color: #82a5c8;
+  color: #000;
+  font-size: 150%;
+  line-height: 40px;
+  height: 40px;
+  padding: 0 20px;
+  margin: 0;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* ── Tables ── */
+.table-spacing {
+  border-collapse: separate;
+  border-spacing: 10px;
+  width: max-content;
+}
+
+.machine-header {
+  background-color: #daeaf7;
+  color: #1a1a1a;
+  font-size: 150%;
+  font-weight: bold;
+  text-align: center;
+}
+
+.machine-header a {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.machine-header a:hover {
+  text-decoration: underline;
+}
+
+.img-sized {
+  max-width: calc(497px * 0.70);
+  display: block;
+  height: auto;
+  max-height: 800px;
+  object-fit: cover;
+  object-position: top;
+}
+
+.img-placeholder {
+  width: 348px;
+  height: 190px;
+  background: #d8d8d8;
+  border: 1px dashed #aaa;
+  color: #666;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── GPU layout ── */
+.gpu-machine-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  margin: 10px;
+  gap: 0;
+}
+
+.gpu-machine-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  background: #daeaf7;
+  color: #1a1a1a;
+  font-size: 130%;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 6px;
+  min-width: 36px;
+}
+
+.gpu-machine-label a {
+  color: #1a1a1a;
+  text-decoration: none;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.gpu-machine-label a:hover {
+  text-decoration: underline;
+}
+
+.gpu-metrics-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 8px;
+  background: #111;
+}
+
+.gpu-metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.gpu-metric-label {
+  color: #aaa;
+  font-size: 11px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+</style>
+
+<script>
+let timeMode = "day";
+let currentView = "machines";
+
+/* ── Machine config ── */
+/* tab: 1 = Servers, 2 = RPis */
+const machines = [
+  { name: "tessier-ashpool - DL580",  host: "192.168.15.14", path: "munin/tools/tessier-ashpool.tools",   gpu: false, tab: 1 },
+  { name: "maelcum - nuc-11",         host: "192.168.77.61", path: "munin/tools/nuc-11.tools",            gpu: false, tab: 1 },
+  { name: "armitage - avado",         host: "192.168.15.13", path: "munin/tools/armitage.tools",          gpu: false, tab: 1 },
+  { name: "flatline - avado",         host: "192.168.15.12", path: "munin/ai/flatline.ai",                gpu: false, tab: 1 },
+  { name: "neuromancer - Z820",       host: "192.168.15.11", path: "munin/ai/neuromancer.ai",             gpu: true,  tab: 1 },
+  { name: "rpi1 - v4b 8GB",           host: "192.168.13.71", path: "munin/tools/rpi-01.tools",            gpu: false, tab: 2 },
+  { name: "rpi2 - v4b 4GB",           host: "192.168.13.72", path: "munin/tool/rpi-02.tool",              gpu: false, tab: 2 },
+  { name: "rpi3 - v3 1GB",            host: "192.168.13.73", path: "munin/tool/rpi-03.tool",              gpu: false, tab: 2 },
+  { name: "rpi4 - v4b 4GB",           host: "192.168.13.74", path: "munin/tools/rpi-04.tools",            gpu: false, tab: 2 },
+  { name: "rpi5 - v3 1GB",            host: "192.168.77.75", path: "munin/tools/rpi-05.tools",            gpu: false, tab: 2 },
+  { name: "rpi6 - v5 8GB",            host: "192.168.13.76", path: "munin/tools/rpi-06.tools",            gpu: false, tab: 2 },
+  { name: "wintermute-i7",            host: "192.168.15.10", path: "munin/ai/wintermute.ai",              gpu: true,  tab: 1 }
+];
+
+const servers = machines.filter(m => m.tab === 1);
+const rpis    = machines.filter(m => m.tab === 2);
+
+/* ── View switch ── */
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll(".view-btn").forEach(a => a.classList.remove("active"));
+  document.querySelector(`.view-btn[data-view="${view}"]`).classList.add("active");
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("visible"));
+  document.getElementById(`view-${view}`).classList.add("visible");
+  window.scrollTo(0, 0);
+}
+
+/* ── Time mode ── */
+function setTimeMode(mode) {
+  timeMode = mode;
+  document.querySelectorAll(".time-btn").forEach(a => a.classList.remove("active"));
+  document.querySelector(`.time-btn[data-mode="${mode}"]`).classList.add("active");
+  document.querySelectorAll("img[data-base]").forEach(img => {
+    img.src = `${img.dataset.base}-${timeMode}.png`;
+  });
+}
+
+/* ── Image helper ── */
+const IMG_TIMEOUT_MS = 3000;
+
+function makePlaceholder(reason) {
+  const ph = document.createElement("div");
+  ph.className = "img-placeholder";
+  const icon = document.createElement("img");
+  icon.src = reason === "timeout" ? "./static/timeout.png" : "./static/nodata.png";
+  icon.alt = "";
+  icon.style.cssText = "width:50px;height:50px;margin-right:8px";
+  ph.appendChild(icon);
+  ph.appendChild(document.createTextNode(reason));
+  return ph;
+}
+
+function attachImageWithTimeout(img, wrapper, onFail) {
+  let settled = false;
+
+  const timer = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    img.src = ""; // cancel load
+    img.onerror = null;
+    img.onload  = null;
+    onFail("timeout");
+  }, IMG_TIMEOUT_MS);
+
+  img.onload = function () {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+  };
+
+  img.onerror = function () {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    onFail("no data");
+  };
+}
+
+function makeImage(base, linkHref) {
+  const img = document.createElement("img");
+  img.className = "img-sized";
+  img.dataset.base = base;
+
+  let wrapper;
+  if (linkHref) {
+    wrapper = document.createElement("a");
+    wrapper.href = linkHref;
+    wrapper.appendChild(img);
+  } else {
+    wrapper = img;
+  }
+
+  attachImageWithTimeout(img, wrapper, (reason) => {
+    const ph = makePlaceholder(reason);
+    if (wrapper.parentNode) wrapper.parentNode.replaceChild(ph, wrapper);
+  });
+
+  img.src = `${base}-${timeMode}.png`;
+  return wrapper;
+}
+
+/* ── Table builders ── */
+function buildHeaderRow(machinesToShow) {
+  const tr = document.createElement("tr");
+  machinesToShow.forEach(m => {
+    const td = document.createElement("td");
+    td.className = "machine-header";
+    const a = document.createElement("a");
+    a.href = `http://${m.host}/${m.path}/index.html`;
+    a.textContent = m.name;
+    td.appendChild(a);
+    tr.appendChild(td);
+  });
+  return tr;
+}
+
+function buildTable(id, metric, multigraph, machinesToShow) {
+  machinesToShow = machinesToShow || machines;
+  const wrap = document.getElementById(id);
+  const table = document.createElement("table");
+  table.className = "table-spacing";
+  table.appendChild(buildHeaderRow(machinesToShow));
+
+  const row = document.createElement("tr");
+  machinesToShow.forEach(m => {
+    const td = document.createElement("td");
+    const base = `http://${m.host}/${m.path}/${metric}`;
+    const link = multigraph ? `${base}/index.html` : `${base}.html`;
+    td.appendChild(makeImage(base, link));
+    row.appendChild(td);
+  });
+
+  table.appendChild(row);
+  wrap.appendChild(table);
+}
+
+/* ── GPU ── */
+const gpuMetrics = [
+  { label: "Memory Used",  metric: "nvidia_gpu_memory_used",  multigraph: false },
+  { label: "Power Draw",   metric: "nvidia_gpu_power_draw",   multigraph: false },
+  { label: "Temperature",  metric: "nvidia_gpu_temperature",  multigraph: false },
+  { label: "Utilization",  metric: "nvidia_gpu_utilization",  multigraph: false }
+];
+
+function buildGpu(id, machineList) {
+  const wrap = document.getElementById(id);
+  const gpuMachines = (machineList || machines).filter(m => m.gpu);
+
+  if (gpuMachines.length === 0) {
+    const msg = document.createElement("p");
+    msg.style.cssText = "color:#888;padding:10px";
+    msg.textContent = "No machines with GPU configured.";
+    wrap.appendChild(msg);
+    return;
+  }
+
+  gpuMachines.forEach(m => {
+    const machineRow = document.createElement("div");
+    machineRow.className = "gpu-machine-row";
+
+    const label = document.createElement("div");
+    label.className = "gpu-machine-label";
+    const labelLink = document.createElement("a");
+    labelLink.href = `http://${m.host}/${m.path}/index.html`;
+    labelLink.textContent = m.name;
+    label.appendChild(labelLink);
+    machineRow.appendChild(label);
+
+    const metricsRow = document.createElement("div");
+    metricsRow.className = "gpu-metrics-row";
+
+    gpuMetrics.forEach(gm => {
+      const card = document.createElement("div");
+      card.className = "gpu-metric-card";
+      const lbl = document.createElement("div");
+      lbl.className = "gpu-metric-label";
+      lbl.textContent = gm.label;
+      const base = `http://${m.host}/${m.path}/${gm.metric}`;
+      const link = gm.multigraph ? `${base}/index.html` : `${base}.html`;
+      card.appendChild(lbl);
+      card.appendChild(makeImage(base, link));
+      metricsRow.appendChild(card);
+    });
+
+    machineRow.appendChild(metricsRow);
+    wrap.appendChild(machineRow);
+  });
+}
+
+/* ── Apps view: only show machines that have real data for the metric.
+   When an image errors, hide both its data cell and the header cell above it. */
+function buildAppTable(id, metric, multigraph) {
+  const wrap = document.getElementById(id);
+  const table = document.createElement("table");
+  table.className = "table-spacing";
+
+  const headRow = document.createElement("tr");
+  const dataRow = document.createElement("tr");
+
+  machines.forEach(m => {
+    const thTd = document.createElement("td");
+    thTd.className = "machine-header";
+    const a = document.createElement("a");
+    a.href = `http://${m.host}/${m.path}/index.html`;
+    a.textContent = m.name;
+    thTd.appendChild(a);
+    headRow.appendChild(thTd);
+
+    const dataTd = document.createElement("td");
+    const base = `http://${m.host}/${m.path}/${metric}`;
+    const link = multigraph ? `${base}/index.html` : `${base}.html`;
+
+    const img = document.createElement("img");
+    img.className = "img-sized";
+    img.dataset.base = base;
+    const anchor = document.createElement("a");
+    anchor.href = link;
+    anchor.appendChild(img);
+    dataTd.appendChild(anchor);
+
+    attachImageWithTimeout(img, anchor, (reason) => {
+      dataTd.style.display = "none";
+      thTd.style.display   = "none";
+    });
+
+    dataRow.appendChild(dataTd);
+  });
+
+  table.appendChild(headRow);
+  table.appendChild(dataRow);
+  wrap.appendChild(table);
+}
+
+/* ── Init ── */
+window.onload = function () {
+  /* Apps view — buildAppTable hides machines with no data */
+  buildAppTable("geth",           "geth",              true);
+  buildAppTable("lighthouse",     "lighthouse",        true);
+  buildAppTable("temp_ext",       "sensors_ext_temp",  false);
+  buildAppTable("boinc_finished", "boinc_finished",    false);
+  buildAppTable("boinc_tasks",    "boinc_tasks",       false);
+  buildAppTable("handbrake_progress", "handbrake_progress", false);
+
+  /* Servers view — Performance */
+  buildTable("cpu",         "cpu",                  false, servers);
+  buildTable("memory",      "memory",               false, servers);
+  buildTable("load",        "load",                 false, servers);
+  buildTable("uptime",      "uptime",               false, servers);
+
+  /* Servers view — IO */
+  buildTable("df",         "df",                    false, servers);
+  buildTable("iops",       "diskstats_iops",        true,  servers);
+  buildTable("throughput", "diskstats_throughput",  true,  servers);
+  buildTable("net",        "fw_packets",            false, servers);
+
+  /* Servers view — GPU */
+  buildGpu("gpu", servers);
+
+  /* Temps view — scoped to servers (RPis don't have HDD/ACPI/core sensors) */
+  buildTable("hdd",       "hddtemp_smartctl",       false, machines);
+  buildTable("temp_core", "sensors_temp",           false, machines);
+  buildTable("acpi",      "acpi",                   false, machines);
+
+  /* RPis view — Performance */
+  buildTable("rpi_cpu",        "cpu",                  false, rpis);
+  buildTable("rpi_memory",     "memory",               false, rpis);
+  buildTable("rpi_load",       "load",                 false, rpis);
+  buildTable("rpi_uptime",     "uptime",               false, rpis);
+
+  /* RPis view — IO */
+  buildTable("rpi_df",         "df",                    false, rpis);
+  buildTable("rpi_iops",       "diskstats_iops",        true,  rpis);
+  buildTable("rpi_throughput", "diskstats_throughput",  true,  rpis);
+  buildTable("rpi_net",        "fw_packets",            false, rpis);
+
+  /* Default state */
+  setTimeMode("day");
+  const viewMap = { "1a": "servers", "1b": "rpis", "2": "temps", "3": "gpu", "4": "apps" };
+  const param = new URLSearchParams(window.location.search).get("v");
+  setView(viewMap[param] || "servers");
+
+};
+</script>
+</head>
+
+<body>
+
+<div id="topbar">
+  <span>View:</span>
+  <a class="view-btn" data-view="servers" href="#" onclick="setView('servers'); return false;">Servers</a>
+  <a class="view-btn" data-view="rpis"    href="#" onclick="setView('rpis');    return false;">RPis</a>
+  <a class="view-btn" data-view="temps"    href="#" onclick="setView('temps');    return false;">Temps</a>
+  <a class="view-btn" data-view="gpu"      href="#" onclick="setView('gpu');      return false;">GPU</a>
+  <a class="view-btn" data-view="apps"     href="#" onclick="setView('apps');     return false;">Apps</a>
+
+  <div class="topbar-sep"></div>
+
+  <span>Time:</span>
+  <a class="time-btn" data-mode="day"   href="#" onclick="setTimeMode('day');   return false;">day</a>
+  <a class="time-btn" data-mode="week"  href="#" onclick="setTimeMode('week');  return false;">week</a>
+  <a class="time-btn" data-mode="month" href="#" onclick="setTimeMode('month'); return false;">month</a>
+  <a class="time-btn" data-mode="year"  href="#" onclick="setTimeMode('year');  return false;">year</a>
+</div>
+
+<!-- ==================== SERVERS VIEW ==================== -->
+<div id="view-servers" class="view">
+
+  <div class="group">
+    <div class="group-header">Performance</div>
+    <div class="section"><h4>CPU Utilization</h4><div id="cpu"></div></div>
+    <div class="section"><h4>Memory</h4><div id="memory"></div></div>
+    <div class="section"><h4>CPU Load</h4><div id="load"></div></div>
+    <div class="section"><h4>Uptime</h4><div id="uptime"></div></div>
+  </div>
+
+  <div class="group">
+    <div class="group-header">IO</div>
+    <div class="section"><h4>Disk Usage</h4><div id="df"></div></div>
+    <div class="section"><h4>IOPS</h4><div id="iops"></div></div>
+    <div class="section"><h4>Throughput</h4><div id="throughput"></div></div>
+    <div class="section"><h4>Network</h4><div id="net"></div></div>
+  </div>
+
+</div>
+
+<!-- ===================== RPIS VIEW ====================== -->
+<div id="view-rpis" class="view">
+
+  <div class="group">
+    <div class="group-header">Performance</div>
+    <div class="section"><h4>CPU Utilization</h4><div id="rpi_cpu"></div></div>
+    <div class="section"><h4>Memory</h4><div id="rpi_memory"></div></div>
+    <div class="section"><h4>CPU Load</h4><div id="rpi_load"></div></div>
+    <div class="section"><h4>Uptime</h4><div id="rpi_uptime"></div></div>
+  </div>
+
+  <div class="group">
+    <div class="group-header">IO</div>
+    <div class="section"><h4>Disk Usage</h4><div id="rpi_df"></div></div>
+    <div class="section"><h4>IOPS</h4><div id="rpi_iops"></div></div>
+    <div class="section"><h4>Throughput</h4><div id="rpi_throughput"></div></div>
+    <div class="section"><h4>Network</h4><div id="rpi_net"></div></div>
+  </div>
+
+</div>
+
+<!-- ===================== TEMPS VIEW ===================== -->
+<div id="view-temps" class="view">
+
+  <div class="group">
+    <div class="group-header">Temp</div>
+    <div class="section"><h4>HDD Temp</h4><div id="hdd"></div></div>
+    <div class="section"><h4>ACPI</h4><div id="acpi"></div></div>
+    <div class="section"><h4>Core Temp</h4><div id="temp_core"></div></div>
+  </div>
+
+</div>
+
+<!-- ====================== GPU VIEW ====================== -->
+<div id="view-gpu" class="view">
+
+  <div class="group">
+    <div class="group-header">GPU</div>
+    <div id="gpu"></div>
+  </div>
+
+</div>
+
+<!-- ===================== APPS VIEW ====================== -->
+<div id="view-apps" class="view">
+
+  <div class="group">
+    <div class="group-header">Apps</div>
+    <div class="section"><h4>ETH Geth</h4><div id="geth"></div></div>
+    <div class="section"><h4>ETH Lighthouse</h4><div id="lighthouse"></div></div>
+    <div class="section"><h4>External Sensors</h4><div id="temp_ext"></div></div>
+    <div class="section"><h4>BOINC Tasks Completed</h4><div id="boinc_finished"></div></div>
+    <div class="section"><h4>BOINC Tasks</h4><div id="boinc_tasks"></div></div>
+    <div class="section"><h4>Handbrake</h4><div id="handbrake_progress"></div></div>
+  </div>
+
+</div>
+
+</body>
+</html>
