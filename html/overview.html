@@ -469,9 +469,12 @@ function buildAppTable(id, metric, multigraph) {
 /* ── Init ── */
 window.onload = function () {
   /* Apps view — buildAppTable hides machines with no data */
+  /*             ID                Metric              Multigraph */
   buildAppTable("geth",           "geth",              true);
   buildAppTable("lighthouse",     "lighthouse",        true);
   buildAppTable("temp_ext",       "sensors_ext_temp",  false);
+  buildAppTable("boinc_finished_aggregate", "boinc_finished_aggregate",    false);
+  buildAppTable("boinc_finished_by_project", "boinc_finished_by_project",    false);
   buildAppTable("boinc_finished", "boinc_finished",    false);
   buildAppTable("boinc_tasks",    "boinc_tasks",       false);
   buildAppTable("handbrake_progress", "handbrake_progress", false);
@@ -609,6 +612,8 @@ window.onload = function () {
     <div class="section"><h4>ETH Geth</h4><div id="geth"></div></div>
     <div class="section"><h4>ETH Lighthouse</h4><div id="lighthouse"></div></div>
     <div class="section"><h4>External Sensors</h4><div id="temp_ext"></div></div>
+    <div class="section"><h4>BOINC tasks done during last 24h by machine</h4><div id="boinc_finished_aggregate"></div></div>
+    <div class="section"><h4>BOINC tasks done during last 24h by project</h4><div id="boinc_finished_by_project"></div></div>
     <div class="section"><h4>BOINC Tasks Completed</h4><div id="boinc_finished"></div></div>
     <div class="section"><h4>BOINC Tasks</h4><div id="boinc_tasks"></div></div>
     <div class="section"><h4>Handbrake</h4><div id="handbrake_progress"></div></div>
