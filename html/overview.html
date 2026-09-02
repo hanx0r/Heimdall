@@ -232,19 +232,20 @@ let currentView = "machines";
 /* ── Machine config ── */
 /* tab: 1 = Servers, 2 = RPis */
 const machines = [
-  { name: "hideo - asus ux325"     ,  host: "192.168.15.16", path: "munin/srv/hideo.srv",                 gpu: false, tab: 1 },
-  { name: "tessier-ashpool - DL580",  host: "192.168.15.14", path: "munin/tools/tessier-ashpool.tools",   gpu: false, tab: 1 },
-  { name: "maelcum - nuc-11",         host: "192.168.77.61", path: "munin/srv/maelcum.srv",               gpu: false, tab: 1 },
+  { name: "aleph - hugo's gaming"  ,  host: "192.168.14.99", path: "munin/srv/aleph.srv",                 gpu: false, tab: 1 },
   { name: "armitage - avado",         host: "192.168.15.13", path: "munin/srv/armitage.srv",              gpu: false, tab: 1 },
   { name: "flatline - avado",         host: "192.168.15.12", path: "munin/srv/flatline.srv",              gpu: false, tab: 1 },
+  { name: "hideo - asus ux325"     ,  host: "192.168.15.16", path: "munin/srv/hideo.srv",                 gpu: false, tab: 1 },
+  { name: "maelcum - nuc-11",         host: "192.168.77.61", path: "munin/srv/maelcum.srv",               gpu: false, tab: 1 },
   { name: "neuromancer - Z820",       host: "192.168.15.11", path: "munin/ai/neuromancer.ai",             gpu: true,  tab: 1 },
+  { name: "tessier-ashpool - DL580",  host: "192.168.15.14", path: "munin/tools/tessier-ashpool.tools",   gpu: false, tab: 1 },
+  { name: "wintermute - i7",          host: "192.168.15.10", path: "munin/srv/wintermute.srv",            gpu: true,  tab: 1 },
   { name: "rpi1 - v4b 8GB",           host: "192.168.77.71", path: "munin/rpi/rpi-01.rpi",                gpu: false, tab: 2 },
   { name: "rpi2 - v4b 4GB",           host: "192.168.13.72", path: "munin/tool/rpi-02.tool",              gpu: false, tab: 2 },
   { name: "rpi3 - v3 1GB",            host: "192.168.13.73", path: "munin/tool/rpi-03.tool",              gpu: false, tab: 2 },
   { name: "rpi4 - v4b 4GB",           host: "192.168.13.74", path: "munin/tools/rpi-04.tools",            gpu: false, tab: 2 },
   { name: "rpi5 - v3 1GB",            host: "192.168.77.75", path: "munin/tools/rpi-05.tools",            gpu: false, tab: 2 },
-  { name: "rpi6 - v5 8GB",            host: "192.168.13.76", path: "munin/rpi/rpi-06.rpi",                gpu: false, tab: 2 },
-  { name: "wintermute - i7",          host: "192.168.15.10", path: "munin/srv/wintermute.srv",            gpu: true,  tab: 1 }
+  { name: "rpi6 - v5 8GB",            host: "192.168.13.76", path: "munin/rpi/rpi-06.rpi",                gpu: false, tab: 2 }
 ];
 
 const servers = machines.filter(m => m.tab === 1);
@@ -479,7 +480,7 @@ window.onload = function () {
   buildAppTable("boinc_tasks",    "boinc_tasks",       false);
   buildAppTable("handbrake_progress", "handbrake_progress", false);
 
-  /* Servers view — Performance */
+  /* Servers view — Performance */   		
   buildTable("cpu",         "cpu",                  false, servers);
   buildTable("memory",      "memory",               false, servers);
   buildTable("load",        "load",                 false, servers);
